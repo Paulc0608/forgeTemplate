@@ -20,6 +20,7 @@ public class CommandSetYaw extends CommandBase {
         return "/setYaw <yaw> [pitch]";
     }
 
+
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         if (sender instanceof EntityPlayer) {
