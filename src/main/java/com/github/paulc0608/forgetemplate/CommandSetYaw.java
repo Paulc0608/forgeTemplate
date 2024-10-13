@@ -8,16 +8,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 
-public class CommandSetYaw extends CommandBase {
+public class CommandSetYaw extends ClientCommandBase {
 
-    @Override
-    public String getCommandName() {
-        return "setYaw";
-    }
-
-    @Override
-    public String getCommandUsage(ICommandSender sender) {
-        return "/setYaw <yaw> [pitch]";
+    public CommandSetYaw() {
+        super("setYaw");
     }
 
 
