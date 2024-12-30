@@ -1,7 +1,7 @@
-package com.github.paulc0608.forgetemplate;
+package com.github.paulc0608.forgetemplate.commands;
 
 import java.util.List;
-import net.minecraft.command.CommandBase;
+
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
@@ -50,8 +50,4 @@ public class CommandSetYaw extends ClientCommandBase {
         return args.length == 1 ? getListOfStringsMatchingLastWord(args, "0", "90", "180", "270") : null;
     }
 
-    @Override
-    public boolean canCommandSenderUseCommand(ICommandSender sender) {
-        return true;
-    }
 }

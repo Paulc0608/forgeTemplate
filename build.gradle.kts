@@ -8,8 +8,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-//Constants:
-
+// Constants:
 val baseGroup: String by project
 val mcVersion: String by project
 val version: String by project
@@ -27,9 +26,10 @@ loom {
     log4jConfigs.from(file("log4j2.xml"))
     launchConfigs {
         "client" {
-            // If you don't want mixins, remove these lines
             property("mixin.debug", "true")
             arg("--tweakClass", "org.spongepowered.asm.launch.MixinTweaker")
+            // Loads OneConfig in dev env, replacing other tweak classes but keeping other attributes
+            arg("--tweakClass", "cc.polyfrost.oneconfig.loader.stage0.LaunchWrapperTweaker")
         }
     }
     runConfigs {
@@ -43,14 +43,12 @@ loom {
     }
     forge {
         pack200Provider.set(dev.architectury.pack200.java.Pack200Adapter())
-        // If you don't want mixins, remove this lines
         mixinConfig("mixins.$modid.json")
-	    if (transformerFile.exists()) {
-			println("Installing access transformer")
-		    accessTransformer(transformerFile)
-	    }
+        if (transformerFile.exists()) {
+            println("Installing access transformer")
+            accessTransformer(transformerFile)
+        }
     }
-    // If you don't want mixins, remove these lines
     mixin {
         defaultRefmapName.set("mixins.$modid.refmap.json")
     }
@@ -61,12 +59,11 @@ sourceSets.main {
 }
 
 // Dependencies:
-
 repositories {
     mavenCentral()
     maven("https://repo.spongepowered.org/maven/")
-    // If you don't want to log in with your real minecraft account, remove this line
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
+    maven("https://repo.polyfrost.cc/releases")
 }
 
 val shadowImpl: Configuration by configurations.creating {
@@ -77,35 +74,34 @@ dependencies {
     minecraft("com.mojang:minecraft:1.8.9")
     mappings("de.oceanlabs.mcp:mcp_stable:22-1.8.9")
     forge("net.minecraftforge:forge:1.8.9-11.15.1.2318-1.8.9")
-
-    // If you don't want mixins, remove these lines
+    compileOnly("cc.polyfrost:oneconfig-1.8.9-forge:0.2.2-alpha+") // Not included in JAR
+    implementation("cc.polyfrost:oneconfig-wrapper-launchwrapper:1.0.0-beta+") // Should be included in JAR
+    implementation("org.json:json:20210307")
     shadowImpl("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
         isTransitive = false
     }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT")
-
-    // If you don't want to log in with your real minecraft account, remove this line
     runtimeOnly("me.djtheredstoner:DevAuth-forge-legacy:1.2.1")
-
+    implementation("org.apache.logging.log4j:log4j-api:2.14.1")
+    implementation("org.apache.logging.log4j:log4j-core:2.14.1")
 }
 
 // Tasks:
-
-tasks.withType(JavaCompile::class) {
+tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
-tasks.withType(org.gradle.jvm.tasks.Jar::class) {
+tasks.withType<org.gradle.jvm.tasks.Jar> {
     archiveBaseName.set(modid)
-    manifest.attributes.run {
-        this["FMLCorePluginContainsFMLMod"] = "true"
-        this["ForceLoadAsMod"] = "true"
-
-        // If you don't want mixins, remove these lines
-        this["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
-        this["MixinConfigs"] = "mixins.$modid.json"
-	    if (transformerFile.exists())
-			this["FMLAT"] = "${modid}_at.cfg"
+    manifest {
+        attributes.run {
+            this["FMLCorePluginContainsFMLMod"] = "true"
+            this["ForceLoadAsMod"] = "true"
+            this["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
+            this["MixinConfigs"] = "mixins.$modid.json"
+            if (transformerFile.exists())
+                this["FMLAT"] = "${modid}_at.cfg"
+        }
     }
 }
 
@@ -122,7 +118,6 @@ tasks.processResources {
     rename("accesstransformer.cfg", "META-INF/${modid}_at.cfg")
 }
 
-
 val remapJar by tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
     archiveClassifier.set("")
     from(tasks.shadowJar)
@@ -132,6 +127,14 @@ val remapJar by tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
 tasks.jar {
     archiveClassifier.set("without-deps")
     destinationDirectory.set(layout.buildDirectory.dir("intermediates"))
+    manifest {
+        attributes(
+            "ModSide" to "CLIENT",
+            "TweakOrder" to "0",
+            "ForceLoadAsMod" to true,
+            "TweakClass" to "cc.polyfrost.oneconfig.loader.stage0.LaunchWrapperTweaker"
+        )
+    }
 }
 
 tasks.shadowJar {
@@ -144,9 +147,7 @@ tasks.shadowJar {
         }
     }
 
-    // If you want to include other dependencies and shadow them, you can relocate them in here
     fun relocate(name: String) = relocate(name, "$baseGroup.deps.$name")
 }
 
 tasks.assemble.get().dependsOn(tasks.remapJar)
-

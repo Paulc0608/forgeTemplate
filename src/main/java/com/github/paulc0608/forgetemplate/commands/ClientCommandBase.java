@@ -1,4 +1,4 @@
-package com.github.paulc0608.forgetemplate;
+package com.github.paulc0608.forgetemplate.commands;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;

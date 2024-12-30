@@ -1,13 +1,11 @@
-package com.github.paulc0608.forgetemplate;
+package com.github.paulc0608.forgetemplate.commands;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.IChatComponent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 
 import java.util.Timer;
@@ -135,8 +133,4 @@ public class CommandMelon extends ClientCommandBase {
         }
     }
 
-    @Override
-    public boolean canCommandSenderUseCommand(ICommandSender sender) {
-        return true;
-    }
 }
